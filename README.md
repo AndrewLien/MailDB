@@ -32,7 +32,6 @@ Example of credentials file:
 }   
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
 
 
 ### How to use
