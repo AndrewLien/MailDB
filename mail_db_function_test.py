@@ -4,17 +4,14 @@ import json
 data = {}
 
 
-with open('C:\\Users\\andylien.tar.gz\\Dev\\creds\\maildb.json') as f:
+with open('C:\\path\\to\\creds\\of_email.json') as f:
     data = json.load(f)
 
 
 mdb = MailDB(data.get('user'),data.get("password"))
 
 
-#print (mdb.domain)
-
-#insert_key = "second_key"
-
+# Can insert any JSON to the mail db
 insert_key ="key_one"
 insert_value = {
                     "one":"two",
@@ -25,7 +22,9 @@ insert_value = {
                     "seven":7
                 }
 
-#print (mdb.insert(key=insert_key,value=insert_value))
+# An example of an insertion statement
+mdb.insert(key=insert_key,value=insert_value)
 
+# An example of a GET statement
 raw_data = mdb.get(key=insert_key)
-print(raw_data)
+
