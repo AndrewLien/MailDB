@@ -6,7 +6,9 @@ import time
 from itertools import chain
 import email
 import imaplib
-
+from email.parser import HeaderParser
+import json
+from copy import deepcopy
 
 class GmailHandler():
     @staticmethod
@@ -15,10 +17,13 @@ class GmailHandler():
         smtp_ssl_port = 465
         imap_ssl_host = 'imap.gmail.com'
         imap_ssl_port = 993
+        imap_search_key = "X-GM-RAW"
 
         return smtp_ssl_host,smtp_ssl_port, imap_ssl_host,imap_ssl_port
 
-
+    @staticmethod
+    def get_search_key():
+        return "X-GM-RAW"
 
 class Errors():
     @staticmethod
@@ -31,6 +36,14 @@ class Errors():
     @staticmethod
     def missing_value(specific_message=None):
         return "Missing value : {}".format(specific_message)
+
+    @staticmethod
+    def key_exists(specific_message=None):
+        return {"msg":"Key exists in DB : {}".format(specific_message)}
+
+    @staticmethod
+    def invalid_key(specific_message=None):
+        return {'valid_key': "Key not valid", 'msg': "Key does not exist in the database", "specific_message": "{} does not exist".format(specific_message)}
 
 class Helpers():
     @staticmethod
@@ -47,22 +60,21 @@ class Helpers():
         return domain
 
     @staticmethod
-    def search_string(uid_max,criteria):
-        c = list(map(lambda t: (t[0], '"'+str(t[1])+'"'), criteria.items())) + [('UID', '%d:*' % (uid_max+1))]
-        return '(%s)' % ' '.join(chain(*c))
+    def return_valid_emails():
+        """
+        :return list
+        """
+        valid_emails = [
+            "gmail"
+        ]
 
     @staticmethod
-    def get_first_text_block(msg):
-        type = msg.get_content_maintype()
+    def valid_key_structure():
+        """
+        :returns dict
+        """
 
-        if type == 'multipart':
-            for part in msg.get_payload():
-                if part.get_content_maintype() == 'text':
-                    return part.get_payload()
-
-        elif type == 'text':   
-            return msg.get_payload()
-
+        return {"valid_key":"Key not valid","msg":""}
 class MailDB():
     def __init__(self,username,password):
         self.user_name = username
@@ -73,29 +85,61 @@ class MailDB():
         if 'gmail' in self.domain:
             self.smtp_ssl_host, self.smtp_ssl_port, self.imap_ssl_host, self.imap_ssl_port = GmailHandler.get_smtp_info()
 
+
+
     def get(self,key=None):
         if not key:
             return Errors.missing_value(specific_message="Requires Key")
-        criteria = {
-            'FROM': self.user_name,
-            'SUBJECT':key
-        }
 
-        uid_max = 0
 
         server = imaplib.IMAP4_SSL(self.imap_ssl_host,self.imap_ssl_port)
         server.login(self.user_name,self.pass_word)
-        server.select('INBOX')
+        server.select('"[Gmail]/All Mail"')
 
-        result, data = server.uid('search', None, Helpers.search_string(uid_max, criteria))
-        msg = email.message_from_string(data[0][1])
-        print (result)
-        print (data)
-        print (email.message_from_string(data[0][1]))
-        print (Helpers.get_first_text_block(msg))
+        search_key = 'Subject'
+
+        if 'gmail' in self.domain:
+            search_key = GmailHandler.get_search_key()
+        
+        result, data = server.uid('search', None, r'{} "subject:\"{}\""'.format(search_key,key))
+        document_results = None
+        if result == 'OK':
+            
+            split_data = data[0].split()
+            if len(split_data) == 0:
+                return Errors.invalid_key(specific_message="{}".format(key))
+            fetch_num = split_data[-1]
+            result,data = server.uid('fetch', fetch_num, '(RFC822)')
+            
+            header_data = data[0][1].decode('utf-8')
+
+            parser = HeaderParser()
+            msg = parser.parsestr(header_data)
+            document_results = msg.get_payload()
+
         server.logout
 
+        if document_results:
+            return json.loads(document_results)
         
+
+    def validate_key(self,key=None):
+        if not key:
+            return Errors.missing_value(specific_message="Requires key")
+
+        get_key = self.get(key=key)
+        
+        if get_key:
+            if get_key.get('valid_key') == "Key not valid":
+                if get_key.get('valid_key') == True:
+                    return True
+                else:
+                    return False
+            else:
+                return True
+        else:
+            return True
+
     def insert(self,key=None,value=None):
         if self.domain == "INVALID":
             return 'Email State: {}'.format(Errors.bad_email_domain())
@@ -105,8 +149,19 @@ class MailDB():
         if not value:
             return Errors.missing_value(specific_message="Requires value")
 
+
+        try:
+            body = json.dumps(value)
+        except Exception as e:
+            return Errors.missing_value(specific_message="Value must be in valid JSON format")
+
+        # Before we do anything, we need to make sure the key doesn't already exist
+        if self.validate_key(key=key):
+            return Errors.key_exists(specific_message='{}'.format(key))
+
+
+        # Declare variables to prep for email send
         subject = key
-        body = value
         sender = self.user_name
         targets = self.user_name
         msg = MIMEText(body)
