@@ -53,6 +53,30 @@ raw_data = mdb.get(key=insert_key)
 # raw_data = {"key":"value"}
 ```
 
+Below is an example of how to update an existing key from the "database".
+
+```
+insert_key ="key_one"
+
+update_value = {
+    "new":"value",
+    "test":123
+}
+print (mdb.update(key=insert_key,value=update_value))
+
+```
+
+The update function will fail if no such key exist, unless you pass in the forced_insert boolean to True.
+```
+insert_key ="key_two"
+
+update_value = {
+    "new":"value",
+    "test":123
+}
+print (mdb.update(key=insert_key,value=update_value,forced_insert=True))
+
+```
 
 ## Libraries used
 
