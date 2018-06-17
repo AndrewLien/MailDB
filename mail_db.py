@@ -172,7 +172,7 @@ class MailDB():
         try:
             server.login(self.user_name,self.pass_word)
         except:
-            print("ERRORFATAL: Error logging in, perhaps credentials issue? {}".format(e))
+            self.logger.error("ERRORFATAL: Error logging in, perhaps credentials issue?")
             sys.exit()
         server.select('"[Gmail]/All Mail"')
 
