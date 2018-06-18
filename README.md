@@ -32,7 +32,11 @@ Example of credentials file:
 }   
 ```
 
+You may also call the MailDB() class without any user and password arguments if you supply a path to a JSON file containing the credentials. The default path is ~/.maildb/creds.json 
 
+```
+mdb = MailDB()
+```
 
 ### How to use
 
