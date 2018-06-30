@@ -199,7 +199,7 @@ class MailDB():
         server.expunge()  # not need if auto-expunge enabled
 
         server.logout
-        self.logger.info("Deleted 1 entries in the database, also removed {} historical entries.".format(deletion_count.deletion_count-1))
+        self.logger.info("Deleted 1 entries in the database, also removed {} historical entries.".format(deletion_count,deletion_count-1))
         return {"msg":"Deleted {} entries in the database".format(deletion_count)}
         
 
