@@ -116,4 +116,7 @@ https://stackoverflow.com/questions/27743728/python-imaplib-fetch-result-is-none
 https://stackoverflow.com/questions/13403790/python-imap-search-for-partial-subject
 https://stackoverflow.com/questions/7314942/python-imaplib-to-get-gmail-inbox-subjects-titles-and-sender-name
 https://stackoverflow.com/questions/17872094/python-how-to-parse-things-such-as-from-to-body-from-a-raw-email-source-w
+https://www.raspberrypi.org/forums/viewtopic.php?t=87050
+https://stackoverflow.com/questions/3180891/imap-deleting-messages
+
 ```
