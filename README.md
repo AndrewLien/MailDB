@@ -82,6 +82,11 @@ print (mdb.update(key=insert_key,value=update_value,forced_insert=True))
 
 ```
 
+The deletion function will allow you to delete entries in the database by key.
+
+```
+mdb.delete(key=insert_key)
+```
 ## Libraries used
 
 * smtplib - Used for sending mail

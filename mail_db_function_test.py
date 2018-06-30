@@ -1,23 +1,19 @@
-
 from mail_db import MailDB
 import json
 data = {}
-
-
-
 
 # An example of passing no explicit auth
 mdb = MailDB()
 
 # An example of passing in explicit auth
 with open('C:\\path\\to\\creds\\of_email.json') as f:
-   data = json.load(f)
+  data = json.load(f)
 
 
 mdb = MailDB(data.get('user'),data.get("password"))
 
 # Can insert any JSON to the mail db
-insert_key ="key_four"
+insert_key ="key_five"
 insert_value = {
 
                     "one":"two",
@@ -27,6 +23,7 @@ insert_value = {
                     "six":["one","two","three"],
                     "seven":7
                 }
+
 
 # An example of an insertion statement
 print(mdb.insert(key=insert_key,value=insert_value))
@@ -71,3 +68,7 @@ print (mdb.update(key=new_insertkey,value=update_value,forced_insert=True))
 # Requerying the database using the same key, but observe with new values
 raw_data = mdb.get(key=new_insertkey)
 print (raw_data)
+
+
+# An example of deleting entries in the database
+print(mdb.delete(key=insert_key))
