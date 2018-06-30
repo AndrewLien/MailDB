@@ -162,6 +162,47 @@ class MailDB():
         except Exception as e:
             self.logger.error(e)
 
+    def delete(self,key=None):
+        if not key:
+            return Errors.missing_value(specific_message="Requires Key")
+
+
+        server = imaplib.IMAP4_SSL(self.imap_ssl_host,self.imap_ssl_port)
+      
+        try:
+            server.login(self.user_name,self.pass_word)
+        except:
+            self.logger.error("ERRORFATAL: Error logging in, perhaps credentials issue?")
+            sys.exit()
+        server.select('"[Gmail]/All Mail"')
+
+        search_key = 'Subject'
+
+        if 'gmail' in self.domain:
+            search_key = GmailHandler.get_search_key()
+        
+        result, data = server.uid('search', None, r'{} "subject:\"{}\""'.format(search_key,key))
+        document_results = None
+        deletion_count = 0
+        if result == 'OK':
+            
+            split_data = data[0].split()
+            if len(split_data) == 0:
+                return Errors.invalid_key(specific_message="{}".format(key))
+
+            for emails in split_data:                
+                server.uid('STORE', emails, '+X-GM-LABELS', '\\Trash')
+                deletion_count +=1
+            
+        server.select('[Gmail]/Trash')  # select all trash
+        server.store("1:*", '+FLAGS', '\\Deleted')  #Flag all Trash as Deleted
+        server.expunge()  # not need if auto-expunge enabled
+
+        server.logout
+        self.logger.info("Deleted 1 entries in the database, also removed {} historical entries.".format(deletion_count.deletion_count-1))
+        return {"msg":"Deleted {} entries in the database".format(deletion_count)}
+        
+
     def get(self,key=None):
         if not key:
             return Errors.missing_value(specific_message="Requires Key")
